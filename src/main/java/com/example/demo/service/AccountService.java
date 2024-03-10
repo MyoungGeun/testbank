@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.dto.AccountSaveDTO;
 import com.example.demo.dto.DepositDTO;
+import com.example.demo.dto.HistoryAccountDTO;
+import com.example.demo.dto.TransferDTO;
 import com.example.demo.dto.WithdrawalDTO;
 import com.example.demo.handler.exception.DataDeliveryException;
 import com.example.demo.handler.exception.RedirectException;
@@ -147,6 +149,85 @@ public class AccountService {
 			throw new DataDeliveryException(Define.FAILED_PROCESSING, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	// 이체 기능만들기
+	// 1. 출금 계좌 존재 여부
+	// 2. 입금 계좌 존재 확인 
+	// 3. 출금 계좌 본인 소유 확인
+	// 4. 출금 계좌 비번 확인
+	// 5. 출금 계좌 잔액 확인
+	// 6. 출금 계좌 잔액 객체 수정
+	// 7. 입금 계좌 잔액 객체 수정
+	// 8. 출금 계좌 update
+	// 9. 입금 계좌 update
+	// 10. 거래 내역 등록 처리
+	// 11.트랜잭션 처리
+	@Transactional
+	public void updateAccountTransfer(TransferDTO dto, Integer principalId) {
+		// 출금 계좌 정보 조회 
+		Account withdrawAccountEntity = accountRepository.findByNumber(dto.getWAccountNumber());
+		// 입금 계좌 정보 조회 
+		Account depositAccountEntity = accountRepository.findByNumber(dto.getDAccountNumber());
+		
+		if (withdrawAccountEntity == null) {
+			throw new DataDeliveryException(Define.NOT_EXIST_ACCOUNT, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		if (depositAccountEntity == null) {
+			// 하드 코딩된 문자열을 리팩토링 대상입니다. 추후 직접 만들어서 수정해보세요 
+			throw new DataDeliveryException("상대방의 계좌 번호가 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		withdrawAccountEntity.checkOwner(principalId);
+		withdrawAccountEntity.checkPassword(dto.getPassword());
+		withdrawAccountEntity.checkBalacne(dto.getAmount());
+		withdrawAccountEntity.withdraw(dto.getAmount());
+		depositAccountEntity.deposit(dto.getAmount());
+		
+		// TransferDTO 에 History 객체를 반환하는 메서들 만들어 줄 수 있습니다. 
+		// 여기서는 직접 만들도록 하겠습니다.
+		History history = History.builder()
+				.amount(dto.getAmount()) // 이체 금액
+				.wAccountId(withdrawAccountEntity.getId()) // 출금 계좌
+				.dAccountId(depositAccountEntity.getId()) // 입금 계좌
+				.wBalance(withdrawAccountEntity.getBalance()) // 출금 계좌 남은 잔액
+				.dBalance(depositAccountEntity.getBalance()) // 입금 계좌 남은 잔액
+				.build();
+		
+		int resultRowCountHistory =  histroyRepository.insert(history);
+		if(resultRowCountHistory != 1) {
+			throw new DataDeliveryException(Define.FAILED_PROCESSING, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+				
+	}
+	
+	// 단일 계좌 조회 기능
+	public Account readAccountById(Integer accountId) {
+		Account accountEntity = accountRepository.findByAccountId(accountId);
+		if (accountEntity == null) {
+			throw new DataDeliveryException(Define.NOT_EXIST_ACCOUNT, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		return accountEntity;
+		
+	}
+	
+	/**
+	 * 단일 계좌 거래 내역 조회  
+	 * @param type = [all, deposit, withdrawal]
+	 * @param account_id (account_tb PK) 
+	 * @return 입금, 출금, 입출금 거래내역 (3가지 타입) OR null   
+	 */
+	@Transactional // 복잡한 Select 구문에는 트랜잭션 처리하는 것이 좋다
+	// ACID - 트랜잭션 처리를 위해 지켜야 할 네 가지 핵심 특성
+	// 고립성(Isolation) 
+	// 트랜잭션이 독립적으로 실행되고, 다른 트랜잭션의 연산이 현재 트랜잭션에
+	// 영향을 주지 않도록 보장하는 성질을 의미
+	public List<HistoryAccountDTO> readHistoryByAccountId(String type, Integer accountId) {
+		List<HistoryAccountDTO> historyDtos = histroyRepository.findByAccountIdAndTypeOfHistory(type, accountId);
+		return historyDtos;
+	}
+	
+	
 	
 	
 }

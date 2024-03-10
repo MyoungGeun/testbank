@@ -9,6 +9,7 @@ import com.example.demo.handler.exception.DataDeliveryException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import com.example.demo.utils.Define;
 //Account Entity 를 설계 중입니다.
@@ -17,6 +18,8 @@ import com.example.demo.utils.Define;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(callSuper=false)
+//슈퍼클래스의 equals와 hashCode를 호출하지 않음을 명시
 public class Account {
 	private Integer id; 
 	private String number; 

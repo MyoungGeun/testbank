@@ -19,5 +19,8 @@ public interface AccountRepository {
 	// 어노테이션을 활용할 수 있습니다. 
 	// 2개 이상에 파라미터을 설계한다면 반드시 @Param 어노테이션을 지정해 주세요 
 	public List<Account> findAllByUserId(@Param("userId") Integer principalId);
-	public Account findByNumber(String number);
+	public Account findByNumber(@Param("number")String id);
+
+	// 코드 추가 부분 
+	public Account findByAccountId(Integer accountId);
 }

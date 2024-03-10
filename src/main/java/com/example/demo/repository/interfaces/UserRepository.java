@@ -19,6 +19,7 @@ public interface UserRepository {
 	// 코드 추가 1단계 - 조회 : username, password
 	// 주의!! - 파라미터가 2개 이상일 경우 @Param 어노테이션을 반드시 선언
 	public User findByUsernameAndPassword(@Param("username") String username, @Param("password") String password);
-
+	
+	public User findByUsername(String username);
 
 }

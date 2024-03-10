@@ -38,6 +38,10 @@ mybatis:
    
 logging:
   level:
-    org.mybatis: DEBUG
+    org.mybatis: DEBUG # MyBatis 로깅 레벨을 DEBUG로 설정하여, 실행되는 SQL 쿼리와 내부 로깅 정보를 콘솔에 출력합니다.
+
+# 1. 코드 추가 
+file:
+  upload-dir: uploads/  # yml 파일에 파일 업로드 디렉토리 경로 설정
         
       

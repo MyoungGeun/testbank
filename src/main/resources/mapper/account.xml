@@ -23,4 +23,8 @@
 	<select id="findByNumber"  resultType="com.example.demo.repository.model.Account">
 		select * from account_tb where number = #{number}
 	</select>
+	
+	<select id="findByAccountId"  resultType="com.example.demo.repository.model.Account">
+		select * from account_tb where id = #{accountId}
+	</select>
 </mapper>
